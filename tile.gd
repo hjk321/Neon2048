@@ -53,7 +53,7 @@ func do_state(delta: float) -> void:
 		STATE.SLIDE: state_slide(delta)
 
 # do nothing except make sure the tile is visible
-func state_idle():
+func state_idle() -> void:
 	modulate.a = 1.0
 
 # fade in over time, then become idle
@@ -71,5 +71,16 @@ func state_disappear(delta: float) -> void: #
 	modulate.a = state_data
 	if state_data <= 0.0: queue_free()
 
+# TODO: animate. for now, it just shifts instantly
 func state_slide(_delta: float) -> void:
-	pass
+	if not (state_data is Vector2):
+		state = STATE.IDLE
+		return
+	position += state_data
+	state = STATE.IDLE
+
+# Applies the sliding animation. Stacks with additional calls to slide_tile
+func slide_tile(diff: Vector2) -> void:
+	state = STATE.SLIDE
+	if state_data is Vector2: state_data += diff
+	else: state_data = diff

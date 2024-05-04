@@ -32,7 +32,10 @@ func _ready() -> void:
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
-	pass
+	match state: 
+		STATE.WAITING_FOR_INPUT: state_input()
+		STATE.ANIMATING_TILES: state_animate()
+		STATE.GAME_OVER: pass
 
 # get the scene-space coords of a grid posiiton
 func grid_to_position(pos: Vector2i) -> Vector2:
@@ -57,3 +60,65 @@ func add_tile_at(value: int, pos: Vector2i) -> void:
 	print("Adding tile with value " + str(value) + " at " + str(pos))
 	grid[pos.x][pos.y] = new_tile
 	$Tiles.add_child(new_tile)
+
+# Checks for user input
+func state_input() -> void:
+	var direction := Vector2i.ZERO
+	if Input.is_action_just_pressed("up"): direction = Vector2i.UP
+	elif Input.is_action_just_pressed("down"): direction = Vector2i.DOWN
+	elif Input.is_action_just_pressed("left"): direction = Vector2i.LEFT
+	elif Input.is_action_just_pressed("right"): direction = Vector2i.RIGHT
+	if direction == Vector2i.ZERO: return
+	print("Shifting grid in direction " + str(direction))
+	shift_grid(direction)
+	state = STATE.ANIMATING_TILES
+
+# shifts the grid in a direction, applying tile animations as we go.
+func shift_grid(dir: Vector2i) -> void:
+	match dir:
+		Vector2i.UP:
+			for x in range(GRID_SIZE):
+				var row := []
+				for y in range(GRID_SIZE): row.append(grid[x][y])
+				row = do_row(row, dir)
+				for y in range(GRID_SIZE): grid[x][y] = row[y]
+		Vector2i.DOWN:
+			for x in range(GRID_SIZE):
+				var row := []
+				for y in range(GRID_SIZE - 1, -1, -1): row.append(grid[x][y])
+				row = do_row(row, dir)
+				for y in range(GRID_SIZE): grid[x][y] = row[GRID_SIZE - 1 - y]
+		Vector2i.LEFT:
+			for y in range(GRID_SIZE):
+				var row := []
+				for x in range(GRID_SIZE): row.append(grid[x][y])
+				row = do_row(row, dir)
+				for x in range(GRID_SIZE): grid[x][y] = row[x]
+		Vector2i.RIGHT:
+			for y in range(GRID_SIZE):
+				var row := []
+				for x in range(GRID_SIZE - 1, -1, -1): row.append(grid[x][y])
+				row = do_row(row, dir)
+				for x in range(GRID_SIZE): grid[x][y] = row[GRID_SIZE - 1 - x]
+
+# Proccesses a single row during a shift.
+# Abstracted to one-dimensional array where element 0 is at the "bottom" of current gravity
+func do_row(row: Array, shift_direction: Vector2i) -> Array:
+	# recursively condenses the row so there are no nulls except at the end
+	var condense := func condense(r: Array, n: int, dir: Vector2i, c: Callable) -> Array:
+		if n >= (GRID_SIZE - 1): return r
+		if r[n] == null:
+			for i in range(n + 1, GRID_SIZE):
+				var tile: Variant = r[i]
+				if tile is Tile:
+					(tile as Tile).slide_tile((TILE_SIZE * (i - n)) * dir)
+					r[n] = tile
+					r[i] = null
+					break
+		return c.call(r, n + 1, dir, c)
+	
+	if row.size() != GRID_SIZE: return row
+	return condense.call(row, 0, shift_direction, condense)
+	
+func state_animate() -> void:
+	state = STATE.WAITING_FOR_INPUT # TODO
