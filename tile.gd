@@ -24,22 +24,24 @@ const TEXTURES = {
 	2048: preload("res://2048.png"),
 }
 
-@export var value := 2;
+@export var value := 2:
+	# set the texture when the value changes
+	set(value):
+		if not TEXTURES.has(value):
+			value = 2
+		value = value
+		texture = TEXTURES[value]
 @export var state: STATE = STATE.APPEAR:
+	# set the state data to null when the state changes
 	set(value):
 		if value != state:
 			state = value
 			state_data = null
 var state_data : Variant = null
 
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	if not TEXTURES.has(value):
-		value = 2
-	texture = TEXTURES[value]
 	do_state(0.0)
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	do_state(delta)
 
@@ -50,13 +52,15 @@ func do_state(delta: float) -> void:
 		STATE.DISAPPEAR: state_disappear(delta)
 		STATE.SLIDE: state_slide(delta)
 
+# fade in over time, then become idle
 func state_appear(delta: float) -> void:
 	if not (state_data is float): state_data = 0.0
 	state_data += (delta / FADE_SECONDS)
 	modulate.a = state_data
 	if state_data >= 1.0: state = STATE.IDLE
 
-func state_disappear(delta: float) -> void:
+# fade out over time, then delete the tile
+func state_disappear(delta: float) -> void: #
 	z_index = -10
 	if not (state_data is float): state_data = 1.0
 	state_data -= (delta / FADE_SECONDS)
