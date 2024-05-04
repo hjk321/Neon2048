@@ -151,6 +151,24 @@ func do_row(row: Array, shift_direction: Vector2i) -> Array:
 func state_animate() -> void:
 	for child in $Tiles.get_children():
 		if child is Tile and (child as Tile).state != Tile.STATE.IDLE: return
-	# Turn end
-	state = STATE.WAITING_FOR_INPUT
-	
+	if check_game_over(): state = STATE.GAME_OVER
+	else: state = STATE.WAITING_FOR_INPUT
+
+func check_game_over() -> bool:
+	for x in range(GRID_SIZE):
+		for y in range(GRID_SIZE):
+			var tile: Tile = grid[x][y]
+			if not (tile is Tile): return false # a blank space exists 
+			if tile.value == 2048:
+				($YouWin as CanvasItem).visible = true
+				return true
+			if (x - 1 >= 0) and (grid[x - 1][y] is Tile) and (tile.value == grid[x - 1][y].value):
+				return false
+			if (x + 1 < GRID_SIZE) and (grid[x + 1][y] is Tile) and (tile.value == grid[x + 1][y].value):
+				return false
+			if (y - 1 >= 0) and (grid[x][y - 1] is Tile) and (tile.value == grid[x][y - 1].value):
+				return false
+			if (y + 1 < GRID_SIZE) and (grid[x][y + 1] is Tile) and (tile.value == grid[x][y + 1].value):
+				return false
+	($GameOver as CanvasItem).visible = true
+	return true
