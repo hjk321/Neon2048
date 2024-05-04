@@ -61,6 +61,16 @@ func add_tile_at(value: int, pos: Vector2i) -> void:
 	grid[pos.x][pos.y] = new_tile
 	$Tiles.add_child(new_tile)
 
+# Spawns a 2 or a 4 at a random empty spot, if possible
+func add_random_tile() -> void:
+	var empty: Array[Vector2i] = []
+	for x in range(GRID_SIZE):
+		for y in range(GRID_SIZE):
+			if grid[x][y] == null: empty.append(Vector2i(x,y))
+	if empty.is_empty(): return
+	var new_pos := empty[randi_range(0, empty.size() - 1)]
+	add_tile_at((randi_range(1,2)*2), new_pos)
+
 # Checks for user input
 func state_input() -> void:
 	var direction := Vector2i.ZERO
@@ -70,11 +80,12 @@ func state_input() -> void:
 	elif Input.is_action_just_pressed("right"): direction = Vector2i.RIGHT
 	if direction == Vector2i.ZERO: return
 	print("Shifting grid in direction " + str(direction))
-	shift_grid(direction)
+	do_shift_grid(direction)
+	add_random_tile()
 	state = STATE.ANIMATING_TILES
 
 # shifts the grid in a direction, applying tile animations as we go.
-func shift_grid(dir: Vector2i) -> void:
+func do_shift_grid(dir: Vector2i) -> void:
 	match dir:
 		Vector2i.UP:
 			for x in range(GRID_SIZE):
@@ -123,4 +134,7 @@ func do_row(row: Array, shift_direction: Vector2i) -> Array:
 func state_animate() -> void:
 	for child in $Tiles.get_children():
 		if child is Tile and (child as Tile).state != Tile.STATE.IDLE: return
+	do_turn_end()
+
+func do_turn_end() -> void:
 	state = STATE.WAITING_FOR_INPUT

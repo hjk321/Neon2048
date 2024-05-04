@@ -1,7 +1,7 @@
 class_name Tile
 extends Sprite2D
 
-const FADE_SECONDS := 0.1
+const FADE_SECONDS := 0.2
 const SLIDE_SECONDS := 0.1
 
 enum STATE {
