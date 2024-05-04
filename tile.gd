@@ -1,7 +1,8 @@
 class_name Tile
 extends Sprite2D
 
-const FADE_SECONDS := 0.3
+const FADE_SECONDS := 0.1
+const SLIDE_SECONDS := 0.1
 
 enum STATE {
 	IDLE,
@@ -37,7 +38,13 @@ const TEXTURES = {
 		if value != state:
 			state = value
 			state_data = null
+			state_data_2 = null
+			state_data_3 = null
+
+# TODO clean this up
 var state_data : Variant = null
+var state_data_2 : Variant = null
+var state_data_3: Variant = null
 
 func _ready() -> void:
 	do_state(0.0)
@@ -71,16 +78,23 @@ func state_disappear(delta: float) -> void: #
 	modulate.a = state_data
 	if state_data <= 0.0: queue_free()
 
-# TODO: animate. for now, it just shifts instantly
-func state_slide(_delta: float) -> void:
+# Lerps the tile
+func state_slide(delta: float) -> void:
 	if not (state_data is Vector2):
 		state = STATE.IDLE
 		return
-	position += state_data
-	state = STATE.IDLE
+	if not (state_data_2 is float): state_data_2 = 0.0
+	if not (state_data_3 is Vector2): state_data_3 = state_data
+	state_data_2 += delta
+	if state_data_2 >= SLIDE_SECONDS:
+		state_data_2 = SLIDE_SECONDS
+	position = (state_data_3 as Vector2).lerp(state_data as Vector2, state_data_2 as float / SLIDE_SECONDS)
+	if state_data_2 == SLIDE_SECONDS: state = STATE.IDLE
 
 # Applies the sliding animation. Stacks with additional calls to slide_tile
 func slide_tile(diff: Vector2) -> void:
 	state = STATE.SLIDE
 	if state_data is Vector2: state_data += diff
-	else: state_data = diff
+	else: 
+		state_data = position + diff
+		state_data_3 = position

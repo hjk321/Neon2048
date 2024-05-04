@@ -121,4 +121,6 @@ func do_row(row: Array, shift_direction: Vector2i) -> Array:
 	return condense.call(row, 0, shift_direction, condense)
 	
 func state_animate() -> void:
-	state = STATE.WAITING_FOR_INPUT # TODO
+	for child in $Tiles.get_children():
+		if child is Tile and (child as Tile).state != Tile.STATE.IDLE: return
+	state = STATE.WAITING_FOR_INPUT
