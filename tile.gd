@@ -47,10 +47,14 @@ func _process(delta: float) -> void:
 
 func do_state(delta: float) -> void:
 	match state:
-		STATE.IDLE: return
+		STATE.IDLE: state_idle()
 		STATE.APPEAR: state_appear(delta)
 		STATE.DISAPPEAR: state_disappear(delta)
 		STATE.SLIDE: state_slide(delta)
+
+# do nothing except make sure the tile is visible
+func state_idle():
+	modulate.a = 1.0
 
 # fade in over time, then become idle
 func state_appear(delta: float) -> void:
