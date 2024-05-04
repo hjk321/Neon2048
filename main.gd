@@ -32,6 +32,9 @@ func _ready() -> void:
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
+	if Input.is_action_just_pressed("restart"):
+		var _state := get_tree().reload_current_scene()
+		return
 	match state: 
 		STATE.WAITING_FOR_INPUT: state_input()
 		STATE.ANIMATING_TILES: state_animate()

@@ -1,7 +1,8 @@
 class_name Tile
 extends Sprite2D
 
-const FADE_SECONDS := 0.07
+const APPEAR_SECONDS := 0.13
+const DISAPPEAR_SECONDS := 0.07
 const SLIDE_SECONDS := 0.1
 
 enum STATE {
@@ -68,7 +69,7 @@ func state_idle() -> void:
 func state_appear(delta: float) -> void:
 	z_index = -10
 	if not (state_data is float): state_data = 0.0
-	state_data += (delta / FADE_SECONDS)
+	state_data += (delta / APPEAR_SECONDS)
 	modulate.a = state_data
 	if state_data >= 1.0: state = STATE.IDLE
 
@@ -76,7 +77,7 @@ func state_appear(delta: float) -> void:
 func state_disappear(delta: float) -> void: #
 	z_index = -10
 	if not (state_data is float): state_data = 1.0
-	state_data -= (delta / FADE_SECONDS)
+	state_data -= (delta / DISAPPEAR_SECONDS)
 	modulate.a = state_data
 	if state_data <= 0.0: queue_free()
 
