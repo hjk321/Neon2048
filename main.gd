@@ -129,12 +129,25 @@ func do_row(row: Array, shift_direction: Vector2i) -> Array:
 		return c.call(r, n + 1, dir, c)
 	
 	if row.size() != GRID_SIZE: return row
-	return condense.call(row, 0, shift_direction, condense)
+	row = condense.call(row, 0, shift_direction, condense)
+	
+	# Merge tiles non-recursively
+	for i in range(GRID_SIZE - 1):
+		if not (row[i] is Tile) or not (row[i + 1] is Tile): break # we condensed the row already
+		var tile1: Tile = row[i]
+		var tile2: Tile = row[i + 1]
+		if tile1.value != tile2.value: continue
+		tile1.state = Tile.STATE.DISAPPEAR
+		tile2.value *= 2
+		tile2.slide_tile(TILE_SIZE * shift_direction)
+		row[i] = row[i + 1]
+		row[i + 1] = null
+		row = condense.call(row, 0, shift_direction, condense)
+	return row
 	
 func state_animate() -> void:
 	for child in $Tiles.get_children():
 		if child is Tile and (child as Tile).state != Tile.STATE.IDLE: return
-	do_turn_end()
-
-func do_turn_end() -> void:
+	# Turn end
 	state = STATE.WAITING_FOR_INPUT
+	

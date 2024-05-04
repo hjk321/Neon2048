@@ -1,7 +1,7 @@
 class_name Tile
 extends Sprite2D
 
-const FADE_SECONDS := 0.2
+const FADE_SECONDS := 0.07
 const SLIDE_SECONDS := 0.1
 
 enum STATE {
@@ -27,10 +27,10 @@ const TEXTURES = {
 
 @export var value := 2:
 	# set the texture when the value changes
-	set(value):
-		if not TEXTURES.has(value):
+	set(val):
+		if not TEXTURES.has(val):
 			value = 2
-		value = value
+		value = val
 		texture = TEXTURES[value]
 @export var state: STATE = STATE.APPEAR:
 	# set the state data to null when the state changes
@@ -61,10 +61,12 @@ func do_state(delta: float) -> void:
 
 # do nothing except make sure the tile is visible
 func state_idle() -> void:
+	z_index = 0
 	modulate.a = 1.0
 
 # fade in over time, then become idle
 func state_appear(delta: float) -> void:
+	z_index = -10
 	if not (state_data is float): state_data = 0.0
 	state_data += (delta / FADE_SECONDS)
 	modulate.a = state_data
@@ -80,6 +82,7 @@ func state_disappear(delta: float) -> void: #
 
 # Lerps the tile
 func state_slide(delta: float) -> void:
+	z_index = 10
 	if not (state_data is Vector2):
 		state = STATE.IDLE
 		return
