@@ -13,6 +13,9 @@ enum STATE {
 
 var state := STATE.WAITING_FOR_INPUT
 var grid : Array[Array] = [] # Should be Array[Array[Tile]] but is currently unsupported
+var moves := 0
+var score := 0
+var new_score := 0
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -29,6 +32,8 @@ func _ready() -> void:
 	add_tile_at((randi_range(1,2)*2), tile2_pos)
 	if grid[tile1_pos.x][tile1_pos.y] is Tile: grid[tile1_pos.x][tile1_pos.y].state = Tile.STATE.IDLE
 	if grid[tile2_pos.x][tile2_pos.y] is Tile: grid[tile2_pos.x][tile2_pos.y].state = Tile.STATE.IDLE
+	score += new_score
+	($Score as RichTextLabel).text = "[center]" + str(score) + "[/center]"
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
@@ -56,6 +61,7 @@ func add_tile_at(value: int, pos: Vector2i) -> void:
 		return
 	var new_tile := Tile.new()
 	new_tile.value = value
+	new_score += value
 	new_tile.position = grid_to_position(pos)
 	if new_tile.position == INVALID_POSITION:
 		print("Can't add a tile at " + str(pos) + " because we couldn't find the position for it")
@@ -85,9 +91,15 @@ func state_input() -> void:
 	elif Input.is_action_just_pressed("left"): direction = Vector2i.LEFT
 	elif Input.is_action_just_pressed("right"): direction = Vector2i.RIGHT
 	if direction == Vector2i.ZERO: return
+
+	new_score = 0
 	if do_shift_grid(direction):
 		print("Shifting grid in direction " + str(direction))
 		add_random_tile()
+		moves += 1
+		($Moves as RichTextLabel).text = "[center]" + str(moves) + "[/center]"
+		score += new_score
+		($Score as RichTextLabel).text = "[center]" + str(score) + "[/center]"
 	state = STATE.ANIMATING_TILES
 
 # shifts the grid in a direction, applying tile animations as we go.
