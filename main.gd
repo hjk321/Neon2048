@@ -28,8 +28,8 @@ func _ready() -> void:
 	var tile2_pos := tile1_pos
 	while tile1_pos == tile2_pos: # ensure the two tile positions are different
 		tile2_pos = Vector2i(randi_range(0,3), randi_range(0,3))
-	add_tile_at((randi_range(1,2)*2), tile1_pos)
-	add_tile_at((randi_range(1,2)*2), tile2_pos)
+	add_tile_at(randi_range(0,1), tile1_pos)
+	add_tile_at(randi_range(0,1), tile2_pos)
 	if grid[tile1_pos.x][tile1_pos.y] is Tile: grid[tile1_pos.x][tile1_pos.y].state = Tile.STATE.IDLE
 	if grid[tile2_pos.x][tile2_pos.y] is Tile: grid[tile2_pos.x][tile2_pos.y].state = Tile.STATE.IDLE
 	score += new_score
@@ -61,7 +61,7 @@ func add_tile_at(value: int, pos: Vector2i) -> void:
 		return
 	var new_tile := Tile.new()
 	new_tile.value = value
-	new_score += value
+	new_score += new_tile.true_value()
 	new_tile.position = grid_to_position(pos)
 	if new_tile.position == INVALID_POSITION:
 		print("Can't add a tile at " + str(pos) + " because we couldn't find the position for it")
@@ -78,9 +78,9 @@ func add_random_tile() -> void:
 			if grid[x][y] == null: empty.append(Vector2i(x,y))
 	if empty.is_empty(): return
 	var new_pos := empty[randi_range(0, empty.size() - 1)]
-	var value := 2
+	var value := 0
 	if randi_range(1, 10) == 10:
-		value = 4
+		value += 1
 	add_tile_at(value, new_pos)
 
 # Checks for user input
@@ -167,7 +167,7 @@ func do_row(row: Array, shift_direction: Vector2i) -> void:
 		var tile2: Tile = row[i + 1]
 		if tile1.value != tile2.value: continue
 		tile1.state = Tile.STATE.DISAPPEAR
-		tile2.value *= 2
+		tile2.value += 1
 		tile2.slide_tile(TILE_SIZE * shift_direction)
 		row[i] = row[i + 1]
 		row[i + 1] = null

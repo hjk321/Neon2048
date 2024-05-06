@@ -12,27 +12,27 @@ enum STATE {
 	SLIDE,
 }
 
-const TEXTURES = {
-	2: preload("res://2.png"),
-	4: preload("res://4.png"),
-	8: preload("res://8.png"),
-	16: preload("res://16.png"),
-	32: preload("res://32.png"),
-	64: preload("res://64.png"),
-	128: preload("res://128.png"),
-	256: preload("res://256.png"),
-	512: preload("res://512.png"),
-	1024: preload("res://1024.png"),
-	2048: preload("res://2048.png"),
+const TILES = {
+	0: [preload("res://2.png")],
+	1: [preload("res://4.png")],
+	2: [preload("res://8.png")],
+	3: [preload("res://16.png")],
+	4: [preload("res://32.png")],
+	5: [preload("res://64.png")],
+	6: [preload("res://128.png")],
+	7: [preload("res://256.png")],
+	8: [preload("res://512.png")],
+	9: [preload("res://1024.png")],
+	10: [preload("res://2048.png")],
 }
 
-@export var value := 2:
+@export var value := 0:
 	# set the texture when the value changes
 	set(val):
-		if not TEXTURES.has(val):
-			value = 2
+		if not TILES.has(val):
+			value = 0
 		value = val
-		texture = TEXTURES[value]
+		texture = TILES[value][0]
 @export var state: STATE = STATE.APPEAR:
 	# set the state data to null when the state changes
 	set(value):
@@ -102,3 +102,9 @@ func slide_tile(diff: Vector2) -> void:
 	else: 
 		state_data = position + diff
 		state_data_3 = position
+
+static func true_value_of(val: int) -> int:
+	return 2 ** (val + 1)
+	
+func true_value() -> int:
+	return Tile.true_value_of(value)
