@@ -72,7 +72,10 @@ func add_random_tile() -> void:
 			if grid[x][y] == null: empty.append(Vector2i(x,y))
 	if empty.is_empty(): return
 	var new_pos := empty[randi_range(0, empty.size() - 1)]
-	add_tile_at((randi_range(1,2)*2), new_pos)
+	var value := 2
+	if randi_range(1, 10) == 10:
+		value = 4
+	add_tile_at(value, new_pos)
 
 # Checks for user input
 func state_input() -> void:
