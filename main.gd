@@ -85,42 +85,53 @@ func state_input() -> void:
 	elif Input.is_action_just_pressed("left"): direction = Vector2i.LEFT
 	elif Input.is_action_just_pressed("right"): direction = Vector2i.RIGHT
 	if direction == Vector2i.ZERO: return
-	print("Shifting grid in direction " + str(direction))
-	do_shift_grid(direction)
-	add_random_tile()
+	if do_shift_grid(direction):
+		print("Shifting grid in direction " + str(direction))
+		add_random_tile()
 	state = STATE.ANIMATING_TILES
 
 # shifts the grid in a direction, applying tile animations as we go.
-func do_shift_grid(dir: Vector2i) -> void:
+# returns true if the grid has shifted (which counts as a "move")
+func do_shift_grid(dir: Vector2i) -> bool:
+	var retval := false
 	match dir:
 		Vector2i.UP:
 			for x in range(GRID_SIZE):
 				var row := []
 				for y in range(GRID_SIZE): row.append(grid[x][y])
-				row = do_row(row, dir)
-				for y in range(GRID_SIZE): grid[x][y] = row[y]
+				var new_row := row.duplicate()
+				do_row(new_row, dir)
+				if row.hash() != new_row.hash(): retval = true
+				for y in range(GRID_SIZE): grid[x][y] = new_row[y]
 		Vector2i.DOWN:
 			for x in range(GRID_SIZE):
 				var row := []
 				for y in range(GRID_SIZE - 1, -1, -1): row.append(grid[x][y])
-				row = do_row(row, dir)
-				for y in range(GRID_SIZE): grid[x][y] = row[GRID_SIZE - 1 - y]
+				var new_row := row.duplicate()
+				do_row(new_row, dir)
+				if row.hash() != new_row.hash(): retval = true
+				for y in range(GRID_SIZE): grid[x][y] = new_row[GRID_SIZE - 1 - y]
 		Vector2i.LEFT:
 			for y in range(GRID_SIZE):
 				var row := []
 				for x in range(GRID_SIZE): row.append(grid[x][y])
-				row = do_row(row, dir)
-				for x in range(GRID_SIZE): grid[x][y] = row[x]
+				var new_row := row.duplicate()
+				do_row(new_row, dir)
+				if row.hash() != new_row.hash(): retval = true
+				for x in range(GRID_SIZE): grid[x][y] = new_row[x]
 		Vector2i.RIGHT:
 			for y in range(GRID_SIZE):
 				var row := []
 				for x in range(GRID_SIZE - 1, -1, -1): row.append(grid[x][y])
-				row = do_row(row, dir)
-				for x in range(GRID_SIZE): grid[x][y] = row[GRID_SIZE - 1 - x]
+				var new_row := row.duplicate()
+				do_row(new_row, dir)
+				if row.hash() != new_row.hash(): retval = true
+				for x in range(GRID_SIZE): grid[x][y] = new_row[GRID_SIZE - 1 - x]
+	return retval
 
 # Proccesses a single row during a shift.
 # Abstracted to one-dimensional array where element 0 is at the "bottom" of current gravity
-func do_row(row: Array, shift_direction: Vector2i) -> Array:
+func do_row(row: Array, shift_direction: Vector2i) -> void:
 	# recursively condenses the row so there are no nulls except at the end
 	var condense := func condense(r: Array, n: int, dir: Vector2i, c: Callable) -> Array:
 		if n >= (GRID_SIZE - 1): return r
@@ -134,7 +145,7 @@ func do_row(row: Array, shift_direction: Vector2i) -> Array:
 					break
 		return c.call(r, n + 1, dir, c)
 	
-	if row.size() != GRID_SIZE: return row
+	if row.size() != GRID_SIZE: return
 	row = condense.call(row, 0, shift_direction, condense)
 	
 	# Merge tiles non-recursively
@@ -149,8 +160,7 @@ func do_row(row: Array, shift_direction: Vector2i) -> Array:
 		row[i] = row[i + 1]
 		row[i + 1] = null
 		row = condense.call(row, 0, shift_direction, condense)
-	return row
-	
+
 func state_animate() -> void:
 	for child in $Tiles.get_children():
 		if child is Tile and (child as Tile).state != Tile.STATE.IDLE: return
