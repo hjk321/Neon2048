@@ -14,11 +14,14 @@ enum STATE {
 var state := STATE.WAITING_FOR_INPUT
 var grid : Array[Array] = [] # Should be Array[Array[Tile]] but is currently unsupported
 var moves := 0
+var value := 0
 var score := 0
 var new_score := 0
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	print("-------")
+	print("Starting game")
 	for x in range(GRID_SIZE): 
 		grid.append([])
 		for y in range(GRID_SIZE): 
@@ -32,8 +35,7 @@ func _ready() -> void:
 	add_tile_at(randi_range(0,1), tile2_pos)
 	if grid[tile1_pos.x][tile1_pos.y] is Tile: grid[tile1_pos.x][tile1_pos.y].state = Tile.STATE.IDLE
 	if grid[tile2_pos.x][tile2_pos.y] is Tile: grid[tile2_pos.x][tile2_pos.y].state = Tile.STATE.IDLE
-	score += new_score
-	($Score as RichTextLabel).text = "[center]" + str(score) + "[/center]"
+	($Value as RichTextLabel).text = "[center]" + str(value) + "[/center]"
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
@@ -52,7 +54,7 @@ func grid_to_position(pos: Vector2i) -> Vector2:
 	return (node as Node2D).position
 
 # Adds a tile to the scene and the internal grid
-func add_tile_at(value: int, pos: Vector2i) -> void:
+func add_tile_at(val: int, pos: Vector2i) -> void:
 	if pos.x < 0 or pos.x >= GRID_SIZE or pos.y < 0 or pos.y >= GRID_SIZE:
 		print("Can't add a tile at " + str(pos) + " because that is an invalid position")
 		return
@@ -60,8 +62,8 @@ func add_tile_at(value: int, pos: Vector2i) -> void:
 		print("Can't add a tile at " + str(pos) + " because something is already there")
 		return
 	var new_tile := Tile.new()
-	new_tile.value = value
-	new_score += new_tile.true_value()
+	new_tile.value = val
+	value += new_tile.true_value()
 	new_tile.position = grid_to_position(pos)
 	if new_tile.position == INVALID_POSITION:
 		print("Can't add a tile at " + str(pos) + " because we couldn't find the position for it")
@@ -78,10 +80,10 @@ func add_random_tile() -> void:
 			if grid[x][y] == null: empty.append(Vector2i(x,y))
 	if empty.is_empty(): return
 	var new_pos := empty[randi_range(0, empty.size() - 1)]
-	var value := 0
+	var val := 0
 	if randi_range(1, 10) == 10:
-		value += 1
-	add_tile_at(value, new_pos)
+		val += 1
+	add_tile_at(val, new_pos)
 
 # Checks for user input
 func state_input() -> void:
@@ -98,6 +100,8 @@ func state_input() -> void:
 		add_random_tile()
 		moves += 1
 		($Moves as RichTextLabel).text = "[center]" + str(moves) + "[/center]"
+		($Value as RichTextLabel).text = "[center]" + str(value) + "[/center]"
+		# TODO: disco mode combo multiplier
 		score += new_score
 		($Score as RichTextLabel).text = "[center]" + str(score) + "[/center]"
 	state = STATE.ANIMATING_TILES
@@ -168,6 +172,7 @@ func do_row(row: Array, shift_direction: Vector2i) -> void:
 		if tile1.value != tile2.value: continue
 		tile1.state = Tile.STATE.DISAPPEAR
 		tile2.value += 1
+		new_score += tile2.true_value()
 		tile2.slide_tile(TILE_SIZE * shift_direction)
 		row[i] = row[i + 1]
 		row[i + 1] = null
